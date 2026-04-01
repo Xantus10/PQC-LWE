@@ -8,6 +8,8 @@ class Coder
     @modulo_q = modulo_q
   end
 
+  private
+
   # Encode a single bit
   # @param bit [Integer] An integer 0/1
   def encode_bit(bit)
@@ -22,5 +24,39 @@ class Coder
     raise 'Value is not in range' unless encoded >= 0 && encoded < @modulo_q
 
     encoded >= @modulo_q / 4 && encoded <= 3 * @modulo_q / 4 ? 1 : 0
+  end
+
+  # Encode bytes to bits
+  # @param bytes [String] The byte string
+  # @return [Array<Integer>] Array of 0/1 values
+  def to_bits(bytes)
+    b = bytes.unpack1('B*')
+    raise 'Bytes did not unpack to String' unless b.is_a? String
+
+    b.each_char.map(&:to_i)
+  end
+
+  # Encode bits to bytes
+  # @param bits [Array<Integer>] The bits
+  # @return [String] The byte string
+  def from_bits(bits)
+    bytes = bits.each_slice(8).map { |slice| slice.join.to_i(2) }
+    bytes.pack('C*')
+  end
+
+  public
+
+  # Encode the message to an integer array compliant with LWE
+  # @param message [String] The message
+  # @return [Array<Integer>] The array of integers
+  def encode(message)
+    to_bits(message).map { |bit| encode_bit(bit) }
+  end
+
+  # Decode the integer array from LWE back into the original message
+  # @param array [Array<Integer>] The message
+  # @return [String] The array of integers
+  def decode(array)
+    from_bits(array.map { |bit| decode_bit(bit) })
   end
 end
