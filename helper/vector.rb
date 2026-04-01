@@ -39,6 +39,13 @@ class Vector
     Vector.new(@values.zip(other.values).map { |i1, i2| i1 * i2 })
   end
 
+  # Apply modulo to each value in vector
+  # @param other [Integer] The modulo value
+  # @return [Vector] The result vector
+  def %(other)
+    Vector.new(@values.map { |i1| i1 % other })
+  end
+
   # Compute the dot product between two vectors
   # @param other [Vector] Second vector
   # @return [Integer] The dot product
