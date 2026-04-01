@@ -16,10 +16,18 @@ module RandomHelper
   end
 
   # Get a vector of specified dimensions and of small integers
+  # @param dimensions_n [Integer] The length of the vector
   # @return [Vector] Vector of Small integers
   def random_vector(dimensions_n)
     Vector.new(dimensions_n.times.map { random_small_int })
   end
 
-  module_function :random_small_int, :random_vector
+  # Get a random key material
+  # @param size_bytes [Integer] How big should the key be
+  # @return [String]
+  def random_key(size_bytes)
+    SecureRandom.random_bytes(size_bytes)
+  end
+
+  module_function :random_small_int, :random_vector, :random_key
 end
