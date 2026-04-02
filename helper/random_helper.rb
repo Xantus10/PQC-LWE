@@ -3,12 +3,13 @@
 require 'securerandom'
 
 require_relative 'vector'
+require_relative 'matrix'
 
 # Generator for LWE
 module RandomHelper
   SMALL_MIN = -3
   SMALL_MAX = 3
-  BIG_MAX = 3000
+  BIG_MAX = 3329
 
   # Get a random small integer
   # @return [Integer] Small integer
@@ -25,16 +26,16 @@ module RandomHelper
 
   # Get a vector of specified dimensions and of normally sized integers
   # @param dimensions_n [Integer] The length of the vector
-  # @return [Vector] Vector of Small integers
-  def random_vector(dimensions_n)
-    Vector.new(dimensions_n.times.map { SecureRandom.random_number(BIG_MAX) })
+  # @return [Array<Integer>] Vector of Small integers
+  def random_big_array(dimensions_n)
+    dimensions_n.times.map { SecureRandom.random_number(BIG_MAX) }
   end
 
   # Get an array of random vectors with big numbers (matrix)
   # @param dimensions_n [Integer] The length of the vector and the size of array
-  # @return [Array<Vector>] The matrix
+  # @return [Matrix] The matrix
   def random_matrix(dimensions_n)
-    dimensions_n.times.map { random_vector(dimensions_n) }
+    Matrix.new(dimensions_n.times.map { random_big_array(dimensions_n) })
   end
 
   # Get a random key material
@@ -44,5 +45,5 @@ module RandomHelper
     SecureRandom.random_bytes(size_bytes)
   end
 
-  module_function :random_small_int, :random_small_vector, :random_vector, :random_matrix, :random_key
+  module_function :random_small_int, :random_small_vector, :random_big_array, :random_matrix, :random_key
 end
