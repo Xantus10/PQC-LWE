@@ -2,6 +2,7 @@
 
 require 'securerandom'
 
+require_relative 'prng'
 require_relative 'vector'
 require_relative 'matrix'
 
@@ -24,18 +25,17 @@ module RandomHelper
     Vector.new(dimensions_n.times.map { random_small_int })
   end
 
-  # Get a vector of specified dimensions and of normally sized integers
-  # @param dimensions_n [Integer] The length of the vector
-  # @return [Array<Integer>] Vector of Small integers
-  def random_big_array(dimensions_n)
-    dimensions_n.times.map { SecureRandom.random_number(BIG_MAX) }
-  end
-
-  # Get an array of random vectors with big numbers (matrix)
-  # @param dimensions_n [Integer] The length of the vector and the size of array
+  # Get a matrix of big pseudorandom numbers generated from the seed
+  # @param dimensions_n [Integer] The dimensions of the square matrix
+  # @param seed [String] The seed for PRNG
   # @return [Matrix] The matrix
-  def random_matrix(dimensions_n)
-    Matrix.new(dimensions_n.times.map { random_big_array(dimensions_n) })
+  def pseudorandom_matrix(dimensions_n, seed)
+    prng = PRNG.new(seed)
+    Matrix.new(
+      dimensions_n.times.map do
+        prng.generate_bytes(dimensions_n).bytes
+      end
+    )
   end
 
   # Get a random key material
@@ -45,5 +45,5 @@ module RandomHelper
     SecureRandom.random_bytes(size_bytes)
   end
 
-  module_function :random_small_int, :random_small_vector, :random_big_array, :random_matrix, :random_key
+  module_function :random_small_int, :random_small_vector, :pseudorandom_matrix, :random_key
 end

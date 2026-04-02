@@ -9,9 +9,9 @@ class LWE
   # Default constructor
   # @param dimensions_n [Integer] The dimensions of the vectors
   # @param modulo_q [Integer] The domain of integers
-  # @param public_matrix [Matrix] The public matrix (For encapsulation)
+  # @param matrix_seed [String] The public matrix seed (For encapsulation)
   # @param public_vector [Vector] The public vector (For encapsulation)
-  def initialize(dimensions_n, modulo_q, public_matrix = nil, public_vector = nil)
+  def initialize(dimensions_n: 256, modulo_q: RandomHelper::BIG_MAX, matrix_seed: nil, public_vector: nil)
     # Dimensions of the vectors
     @dimensions = dimensions_n
     # Modulus
@@ -23,9 +23,11 @@ class LWE
     # Secret private vector
     @secret = RandomHelper.random_small_vector(dimensions_n)
 
+    # Seed for matrix generation
+    @seed = matrix_seed.nil? ? RandomHelper.random_key(32) : matrix_seed
     # The matrix from public key, transposed for encapsulation
-    @public_matrix = public_matrix.nil? ? RandomHelper.random_matrix(dimensions_n) : public_matrix.transposed
-
+    @public_matrix = RandomHelper.pseudorandom_matrix(dimensions_n, @seed)
+    @public_matrix = @public_matrix.transposed unless matrix_seed.nil?
     # The computed vector from public key
     @public_vector = public_vector.nil? ? compute_public_vector(@secret) : public_vector
   end
@@ -45,11 +47,11 @@ class LWE
 
   # Get the public key
   # @return [Hash]
-  # @option return [Matrix] :matrix The public matrix
+  # @option return [String] :seed The public matrix seed
   # @option return [Vector] :vector The public vector
   def public_key
     {
-      matrix: @public_matrix,
+      seed: @seed,
       vector: @public_vector
     }
   end
