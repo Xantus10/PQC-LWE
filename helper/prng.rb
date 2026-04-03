@@ -24,8 +24,6 @@ class PRNG
   # Update @key and @v with provided data
   # @param data [String] Some data
   def update(data)
-    raise '@v is nil' if @v.nil?
-
     new = +''
     while new.bytesize < DF_SIZE
       increment_v!
@@ -36,15 +34,14 @@ class PRNG
 
     new = new.bytes.zip((pd + data).bytes).map { |x, y| x ^ y }.pack('C*')
 
-    @key = new.byteslice(0, KEY_SIZE)
-    @v = new.byteslice(KEY_SIZE, BLOCK_SIZE)
+    @key = new.byteslice(0, KEY_SIZE) || "\x00".b * KEY_SIZE
+    @v = new.byteslice(KEY_SIZE, BLOCK_SIZE) || "\x00".b * BLOCK_SIZE
   end
 
   # Encrypt a block with AES
   # @param data [String] The block to encrypt
   def encrypt_block(data)
     raise 'Invalid block size' unless data.size == BLOCK_SIZE
-    raise '@key is nil' if @key.nil?
 
     cipher = OpenSSL::Cipher.new('AES-256-CBC')
     cipher.encrypt
@@ -62,8 +59,6 @@ class PRNG
 
   # Increment the V
   def increment_v!
-    raise '@v is nil' if @v.nil?
-
     bytearray = @v.bytes
     i = 0
     loop do
@@ -80,8 +75,6 @@ class PRNG
   # @param n_bytes [Integer] The length of the output
   # @return [String] The pseudorandom bytes
   def generate_bytes(n_bytes)
-    raise '@v is nil' if @v.nil?
-
     output = +''
     while output.bytesize < n_bytes
       increment_v!
@@ -89,6 +82,6 @@ class PRNG
     end
     update("\x00" * DF_SIZE)
     output = output.byteslice(0, n_bytes)
-    output.nil? ? '' : output
+    output || ''
   end
 end
