@@ -8,14 +8,21 @@ require_relative 'matrix'
 
 # Generator for LWE
 module RandomHelper
-  SMALL_MIN = -3
-  SMALL_MAX = 3
+  SMALL_RANGE = 3
   BIG_MAX = 3329
 
-  # Get a random small integer
+  # Get a random small integer, using centered binominal distribution
   # @return [Integer] Small integer
   def random_small_int
-    SMALL_MAX - SecureRandom.random_number(SMALL_MAX - SMALL_MIN + 1)
+    bits = SecureRandom.random_bytes((2 * SMALL_RANGE + 7) / 8).bytes
+                       .map { |byte| byte.to_s(2).rjust(8, '0') }
+                       .join[0...SMALL_RANGE * 2]
+
+    # Count bits in first half minus second half
+    s1 = bits[0...SMALL_RANGE].count('1')
+    s2 = bits[SMALL_RANGE...SMALL_RANGE * 2].count('1')
+
+    s1 - s2
   end
 
   # Get a vector of specified dimensions and of small integers
