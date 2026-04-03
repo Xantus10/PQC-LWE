@@ -24,12 +24,12 @@ class LWE
     @secret = RandomHelper.random_small_vector(dimensions_n)
 
     # Seed for matrix generation
-    @seed = matrix_seed.nil? ? RandomHelper.random_key(32) : matrix_seed
+    @seed = matrix_seed || RandomHelper.random_key(32)
     # The matrix from public key, transposed for encapsulation
     @public_matrix = RandomHelper.pseudorandom_matrix(dimensions_n, @seed)
     @public_matrix = @public_matrix.transposed unless matrix_seed.nil?
     # The computed vector from public key
-    @public_vector = public_vector.nil? ? compute_public_vector(@secret) : public_vector
+    @public_vector = public_vector || compute_public_vector(@secret)
   end
 
   private
@@ -54,6 +54,47 @@ class LWE
       seed: @seed,
       vector: @public_vector
     }
+  end
+
+  SERIALIZATION_ENCODERS = {
+    hex: ->(str) { Coder.to_hex(str) },
+    base64: ->(str) { Coder.to_base64(str) },
+    raw: ->(str) { str }
+  }.freeze
+
+  # Serialize the public key
+  # @param encoding [Symbol] Supported encodings are :raw, :hex and :base64
+  # @return [String] The serialized public key
+  def serialized_public_key(encoding: :hex)
+    serialized = @seed + @public_vector.values.pack('s>*')
+
+    SERIALIZATION_ENCODERS.fetch(encoding) { raise 'Encoding not supported' }.call(serialized)
+  end
+
+  # Get the public key
+  # @param serialized [String] Serialized public key
+  # @return [Hash]
+  # @option return [String] :seed The public matrix seed
+  # @option return [Vector] :vector The public vector
+  def self.deserialize_public_key(serialized)
+    if serialized.size == (32 + 512) * 2
+      serialized = Coder.from_hex(serialized)
+    elsif serialized.size != 32 + 512
+      serialized = Coder.from_base64(serialized)
+    end
+
+    {
+      seed: serialized.byteslice(0, 32),
+      vector: Vector.new(serialized.byteslice(32, 512)&.unpack('s>*'))
+    }
+  end
+
+  # Create LWE instance from serialized public key
+  # @param serialized [String] Serialized public key
+  # @return [LWE] LWE instance
+  def self.load_from_serialized_public_key(serialized)
+    pub = deserialize_public_key(serialized)
+    LWE.new(matrix_seed: pub[:seed], public_vector: pub[:vector])
   end
 
   # Encapsulate the message
@@ -84,7 +125,7 @@ class LWE
   # @param encapsulated [Array<Hash>] The encapsulated message, should follow the same structure
   # @return [String] The original message
   def decapsulate(encapsulated)
-    return nil if encapsulated.empty?
+    return '' if encapsulated.empty?
 
     original = []
 
@@ -101,3 +142,15 @@ class LWE
     @coder.decode(original)
   end
 end
+
+alice = LWE.new
+
+pub = alice.serialized_public_key(encoding: :base64)
+
+puts pub
+
+bob = LWE.load_from_serialized_public_key(pub)
+
+enc = bob.encapsulate('Hi Alice')
+
+puts alice.decapsulate(enc)

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'base64'
+
 # En/Decoder class for lwe
 class Coder
   # Default constructor
@@ -58,5 +60,33 @@ class Coder
   # @return [String] The array of integers
   def decode(array)
     from_bits(array.map { |bit| decode_bit(bit) })
+  end
+
+  # Encode string to hex
+  # @param str [String] String to encode
+  # @return [String] The hex string
+  def self.to_hex(str)
+    str.bytes.map { |byte| byte.to_s(16).rjust(2, '0') }.join
+  end
+
+  # Encode string to base64
+  # @param str [String] String to encode
+  # @return [String] The base64 string
+  def self.to_base64(str)
+    Base64.strict_encode64(str)
+  end
+
+  # Decode hex to string
+  # @param str [String] String to decode
+  # @return [String] The result string
+  def self.from_hex(str)
+    [str].pack('H*')
+  end
+
+  # Decode base64 to string
+  # @param str [String] String to decode
+  # @return [String] The result string
+  def self.from_base64(str)
+    Base64.strict_decode64(str)
   end
 end
