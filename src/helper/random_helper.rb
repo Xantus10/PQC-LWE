@@ -2,34 +2,48 @@
 
 require 'securerandom'
 
+require_relative 'constants'
 require_relative 'prng'
 require_relative 'vector'
 require_relative 'matrix'
 
 # Generator for LWE
 module RandomHelper
-  SMALL_RANGE = 3
-  BIG_MAX = 3329
-
   # Get a random small integer, using centered binominal distribution
   # @return [Integer] Small integer
   def random_small_int
-    bits = SecureRandom.random_bytes((2 * SMALL_RANGE + 7) / 8).bytes
+    bits = SecureRandom.random_bytes((2 * Constants::SMALL_RANGE + 7) / 8).bytes
                        .map { |byte| byte.to_s(2).rjust(8, '0') }
-                       .join[0...SMALL_RANGE * 2]
+                       .join[0...Constants::SMALL_RANGE * 2]
 
     # Count bits in first half minus second half
-    s1 = bits[0...SMALL_RANGE].count('1')
-    s2 = bits[SMALL_RANGE...SMALL_RANGE * 2].count('1')
+    s1 = bits[0...Constants::SMALL_RANGE].count('1')
+    s2 = bits[Constants::SMALL_RANGE...Constants::SMALL_RANGE * 2].count('1')
 
     s1 - s2
+  end
+
+  # Get an array filled with random numbers
+  # @param dimensions_n [Integer] The length of the array
+  # @return [Array<Integer>] The random array
+  def random_small_array(dimensions_n)
+    dimensions_n.times.map { random_small_int }
   end
 
   # Get a vector of specified dimensions and of small integers
   # @param dimensions_n [Integer] The length of the vector
   # @return [Vector] Vector of Small integers
   def random_small_vector(dimensions_n)
-    Vector.new(dimensions_n.times.map { random_small_int })
+    Vector.new(random_small_array(dimensions_n))
+  end
+
+  # Get an array of pseudorandom numbers generated from the seed
+  # @param dimensions_n [Integer] The dimensions of the array
+  # @param seed [String] The seed for PRNG
+  # @return [Array<Integer>] The pseudorandom array
+  def pseudorandom_array(dimensions_n, seed)
+    prng = PRNG.new(seed)
+    prng.generate_bytes(dimensions_n).bytes
   end
 
   # Get a matrix of big pseudorandom numbers generated from the seed
@@ -37,10 +51,9 @@ module RandomHelper
   # @param seed [String] The seed for PRNG
   # @return [Matrix] The matrix
   def pseudorandom_matrix(dimensions_n, seed)
-    prng = PRNG.new(seed)
     Matrix.new(
       dimensions_n.times.map do
-        prng.generate_bytes(dimensions_n).bytes
+        pseudorandom_array(dimensions_n, seed)
       end
     )
   end
@@ -52,5 +65,7 @@ module RandomHelper
     SecureRandom.random_bytes(size_bytes)
   end
 
-  module_function :random_small_int, :random_small_vector, :pseudorandom_matrix, :random_key
+  module_function :random_small_int, :random_small_array, :random_small_vector,
+                  :pseudorandom_array, :pseudorandom_matrix,
+                  :random_key
 end

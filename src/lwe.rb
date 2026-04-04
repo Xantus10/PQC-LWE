@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'helper/constants'
 require_relative 'helper/random_helper'
 require_relative 'helper/vector'
 require_relative 'helper/coder'
@@ -11,7 +12,7 @@ class LWE
   # @param modulo_q [Integer] The domain of integers
   # @param matrix_seed [String] The public matrix seed (For encapsulation)
   # @param public_vector [Vector] The public vector (For encapsulation)
-  def initialize(dimensions_n: 256, modulo_q: RandomHelper::BIG_MAX, matrix_seed: nil, public_vector: nil)
+  def initialize(dimensions_n: Constants::ORDER_N, modulo_q: Constants::MODULUS_Q, matrix_seed: nil, public_vector: nil)
     # Dimensions of the vectors
     @dimensions = dimensions_n
     # Modulus
