@@ -89,4 +89,18 @@ class Coder
   def self.from_base64(str)
     Base64.strict_decode64(str)
   end
+
+  # Convert an integer array (2 byte wide integer) to string
+  # @param arr [Array<Integer>] The integer array
+  # @return [String] The byte string
+  def self.str_from_2byte_int_arr(arr)
+    arr.pack('s>*')
+  end
+
+  # Convert a bytestring to integer array (2 byte wide integer)
+  # @param string [String] The byte string
+  # @return [Array<Integer>] The integer array
+  def self.str_to_2byte_int_arr(string)
+    string.bytes.each_slice(2).map { |high, low| high << 8 | low }
+  end
 end

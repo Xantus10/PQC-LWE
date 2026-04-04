@@ -67,7 +67,7 @@ class LWE
   # @param encoding [Symbol] Supported encodings are :raw, :hex and :base64
   # @return [String] The serialized public key
   def serialized_public_key(encoding: :hex)
-    serialized = @seed + @public_vector.values.pack('s>*')
+    serialized = @seed + Coder.str_from_2byte_int_arr(@public_vector.values)
 
     SERIALIZATION_ENCODERS.fetch(encoding) { raise 'Encoding not supported' }.call(serialized)
   end
@@ -86,7 +86,7 @@ class LWE
 
     {
       seed: serialized.byteslice(0, 32),
-      vector: Vector.new(serialized.byteslice(32, 512)&.unpack('s>*'))
+      vector: Vector.new(Coder.str_to_2byte_int_arr(serialized.byteslice(32, 512) || ''))
     }
   end
 
