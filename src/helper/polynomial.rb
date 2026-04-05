@@ -64,7 +64,7 @@ class Polynomial
   def self.ntt_multiply(first, other)
     ntt1 = first.ntt_representation
     ntt2 = other.ntt_representation
-    Polynomial.from_ntt(ntt1 * ntt2, first.modulo, first.root_of_unity)
+    Polynomial.from_ntt((ntt1 * ntt2) % first.modulo, first.modulo, first.root_of_unity)
   end
 
   # Construct a polynomial from its NTT representation (preforms INTT)
