@@ -73,8 +73,9 @@ class Polynomial
   # @param root_of_unity [Integer] The nth primitive root of unity modulo Q
   # @return [Polynomial] The reconstructed polynomial
   def self.from_ntt(ntt, modulo, root_of_unity)
-    inv = Polynomial.root_of_unity_mod_inverse(ntt.size, modulo)
+    inv = Polynomial.root_of_unity_mod_inverse(root_of_unity, modulo)
+    inv_len = Polynomial.root_of_unity_mod_inverse(ntt.size, modulo)
     Polynomial.new(Polynomial.new(ntt.values, modulo: modulo, root_of_unity: inv).ntt_representation
-                             .values.map { |val| (val * inv) % modulo }, modulo: modulo, root_of_unity: root_of_unity)
+                             .values.map { |val| (val * inv_len) % modulo }, modulo: modulo, root_of_unity: root_of_unity)
   end
 end

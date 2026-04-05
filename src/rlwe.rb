@@ -106,39 +106,40 @@ class RingLWE
   # @option return [Polynomial] :key
   # @option return [Polynomial] :ciphertext
   def encapsulate(message)
+    raise 'Message has incorrect length' unless message.bytesize == 32
 
+    # temporary key r
+    ephemeral = RandomHelper.random_small_polynomial(@dimensions)
+    # computed key u
+    key = compute_public_polynomial(ephemeral)
+    # ciphertext v
+    ciphertext = Polynomial.ntt_multiply(@public_polynomial, ephemeral) +
+                 RandomHelper.random_small_polynomial(@dimensions) +
+                 Polynomial.new(@coder.encode(message))
+    {
+      key: key,
+      ciphertext: ciphertext
+    }
   end
 
   # Decapsulate the message
-  # @param encapsulated [Array<Hash>] The encapsulated message, should follow the same structure
+  # @param encapsulated [Hash] The encapsulated message, should follow the same structure
   # @return [String] The original message
   def decapsulate(encapsulated)
     return '' if encapsulated.empty?
 
-    original = []
-
-    encapsulated.each do |enc_bit|
-      raise 'Decapsulating: property \':key\' is not Vector' unless enc_bit[:key].is_a?(Vector)
-      raise 'Decapsulating: property \':ciphertext\' is not Integer' unless enc_bit[:ciphertext].is_a?(Integer)
-
-      original.push(
-        # v - u.s
-        (enc_bit[:ciphertext] - @secret.dot_product(enc_bit[:key]) % @modulo) % @modulo
-      )
-    end
-
-    @coder.decode(original)
+    @coder.decode((encapsulated[:ciphertext] - Polynomial.ntt_multiply(@secret, encapsulated[:key])).values)
   end
 end
 
-alice = LWE.new
+alice = RingLWE.new
 
 pub = alice.serialized_public_key(encoding: :base64)
 
 puts pub
 
-bob = LWE.load_from_serialized_public_key(pub)
+bob = RingLWE.load_from_serialized_public_key(pub)
 
-enc = bob.encapsulate('Hi Alice')
+enc = bob.encapsulate('Hi AliceHi AliceHi AliceHi Alice')
 
 puts alice.decapsulate(enc)
