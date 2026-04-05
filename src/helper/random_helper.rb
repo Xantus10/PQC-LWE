@@ -72,8 +72,7 @@ module RandomHelper
   # @param seed [String] The seed for PRNG
   # @return [Polynomial] The pseudorandom polynomial
   def pseudorandom_polynomial(dimensions_n, seed)
-    prng = PRNG.new(seed)
-    Polynomial.new(prng.generate_bytes(dimensions_n).bytes)
+    Polynomial.new(pseudorandom_array(dimensions_n, seed))
   end
 
   # Get a random key material
